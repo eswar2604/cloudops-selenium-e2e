@@ -1,0 +1,30 @@
+# Selenium Test Runner Container with Headless Chrome
+FROM python:3.11-slim
+
+WORKDIR /workspace
+
+# Install Chromium browser, ChromeDriver and necessary system libs
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    chromium \
+    chromium-driver \
+    curl \
+    ca-certificates \
+    libnss3 \
+    libgconf-2-4 \
+    libfontconfig1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set Chrome binary and driver envs
+ENV CHROME_BIN=/usr/bin/chromium
+ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy test suite and configs
+COPY pytest.ini .
+COPY tests/ ./tests/
+COPY app/ ./app/
+
+# Default entrypoint to run pytest in headless mode against target app
+CMD ["pytest", "tests/", "-v", "--headless", "--html=reports/report.html", "--junitxml=reports/junit.xml", "--self-contained-html"]

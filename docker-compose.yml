@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  web-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: devops_web_app
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - SECRET_KEY=ci-cd-test-secret-key
+    networks:
+      - e2e-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: selenium_test_runner
+    depends_on:
+      web-app:
+        condition: service_healthy
+    environment:
+      - APP_BASE_URL=http://web-app:5000
+    volumes:
+      - ./reports:/workspace/reports
+    networks:
+      - e2e-network
+
+networks:
+  e2e-network:
+    driver: bridge
