@@ -44,13 +44,24 @@ def driver(request):
         options.add_argument("--window-size=1920,1080")
         options.add_argument("--ignore-certificate-errors")
 
-        # Allow running in docker container / CI environments
-        try:
-            service = ChromeService(ChromeDriverManager().install())
+        # Set Chromium binary location if running in Linux container
+        chrome_bin = os.environ.get("CHROME_BIN")
+        if chrome_bin and os.path.exists(chrome_bin):
+            options.binary_location = chrome_bin
+        elif os.path.exists("/usr/bin/chromium"):
+            options.binary_location = "/usr/bin/chromium"
+
+        # Initialize ChromeDriver (handles containerized chromedriver and webdriver-manager)
+        chromedriver_path = os.environ.get("CHROMEDRIVER_PATH")
+        if chromedriver_path and os.path.exists(chromedriver_path):
+            service = ChromeService(executable_path=chromedriver_path)
             driver_instance = webdriver.Chrome(service=service, options=options)
-        except Exception:
-            # Fallback if driver is already on PATH (e.g. Docker / VM / CI)
-            driver_instance = webdriver.Chrome(options=options)
+        else:
+            try:
+                service = ChromeService(ChromeDriverManager().install())
+                driver_instance = webdriver.Chrome(service=service, options=options)
+            except Exception:
+                driver_instance = webdriver.Chrome(options=options)
 
     else:
         raise ValueError(f"Unsupported browser type: {browser_type}")

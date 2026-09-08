@@ -127,8 +127,8 @@ pipeline {
         always {
             echo "=== Cleaning Up Ephemeral CI Resources ==="
             sh '''
-                docker rm -f devops_web_app_ci || true
-                docker network rm e2e-ci-network || true
+                docker rm -f devops_web_app_ci 2>/dev/null || true
+                docker network rm e2e-ci-network 2>/dev/null || true
             '''
         }
         success {
