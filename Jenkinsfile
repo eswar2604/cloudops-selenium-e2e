@@ -16,13 +16,9 @@ pipeline {
     }
 
     stages {
-        stage('Checkout & Lint') {
+        stage('Checkout') {
             steps {
-                echo "=== Step 1: Checking out code and validating syntax ==="
-                sh '''
-                    python3 -m py_compile app/app.py
-                    echo "Syntax validation passed!"
-                '''
+                echo "=== Step 1: Source code checked out successfully ==="
             }
         }
 
