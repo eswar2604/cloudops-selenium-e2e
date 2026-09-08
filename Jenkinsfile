@@ -70,10 +70,11 @@ pipeline {
                     # Clean up old runner container if any
                     docker rm -f selenium_test_runner 2>/dev/null || true
 
-                    # Run Selenium test runner container targeting the ephemeral app
+                    # Run Selenium test runner container targeting the ephemeral app with ample shared memory
                     set +e
                     docker run --name selenium_test_runner \
                         --network e2e-ci-network \
+                        --shm-size=2g \
                         -e APP_BASE_URL="http://devops_web_app_ci:5000" \
                         -e PYTHONPATH="/workspace" \
                         ${TEST_IMAGE_NAME}:${BUILD_TAG} \
@@ -103,7 +104,18 @@ pipeline {
                 // Publish JUnit XML test results
                 junit allowEmptyResults: true, testResults: 'reports/junit_results.xml'
 
-                // Archive HTML report and screenshots
+                // Publish HTML report using HTML Publisher Plugin
+                publishHTML([
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: 'reports',
+                    reportFiles: 'e2e_report.html',
+                    reportName: 'Selenium E2E Test Report',
+                    reportTitles: 'E2E Selenium Automation Results'
+                ])
+
+                // Archive all report artifacts and failure screenshots
                 archiveArtifacts allowEmptyArchive: true, artifacts: 'reports/**'
             }
         }
