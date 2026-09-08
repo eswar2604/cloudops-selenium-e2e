@@ -7,17 +7,12 @@ pipeline {
         BUILD_TAG = "${env.BUILD_NUMBER}"
         STAGING_PORT = "5000"
         REPORTS_DIR = "reports"
-        // Remote VM Configuration (Configure these credentials in Jenkins)
-        TARGET_VM_HOST = credentials('TARGET_VM_HOST') // e.g. 192.168.1.100 or ec2-xx.compute.amazonaws.com
-        TARGET_VM_USER = "ubuntu"
-        SSH_KEY_CREDENTIAL_ID = "vm-ssh-private-key"
     }
 
     options {
         timeout(time: 30, unit: 'MINUTES')
         buildDiscarder(logRotator(numToKeepStr: '15'))
         timestamps()
-        ansiColor('xterm')
     }
 
     stages {
@@ -109,22 +104,25 @@ pipeline {
                 branch 'main'
             }
             steps {
-                echo "=== Step 6: Deploying Verified Container to Target Virtual Machine ==="
-                sshagent([SSH_KEY_CREDENTIAL_ID]) {
-                    sh '''
-                        echo "Deploying to target VM: ${TARGET_VM_USER}@${TARGET_VM_HOST}"
+                echo "=== Step 6: Deploying Verified Container to Target Environment ==="
+                sh '''
+                    echo "Deploying application container on port 5000..."
 
-                        # 1. Transfer docker-compose or compose definition to VM
-                        scp -o StrictHostKeyChecking=no docker-compose.yml ${TARGET_VM_USER}@${TARGET_VM_HOST}:/home/${TARGET_VM_USER}/app/docker-compose.yml
+                    # Stop and remove existing production container if running
+                    docker stop cloudops-prod-app 2>/dev/null || true
+                    docker rm cloudops-prod-app 2>/dev/null || true
 
-                        # 2. Trigger remote container pull/run on VM
-                        ssh -o StrictHostKeyChecking=no ${TARGET_VM_USER}@${TARGET_VM_HOST} "
-                            cd /home/${TARGET_VM_USER}/app && \
-                            docker compose pull web-app || docker run -d --restart always -p 5000:5000 --name cloudops-prod-app ${APP_IMAGE_NAME}:${BUILD_TAG} && \
-                            echo 'Application successfully deployed on target VM!'
-                        "
-                    '''
-                }
+                    # Start verified production application
+                    docker run -d \
+                        --name cloudops-prod-app \
+                        --restart unless-stopped \
+                        -p 5000:5000 \
+                        -e SECRET_KEY="prod-live-secret-key" \
+                        ${APP_IMAGE_NAME}:${BUILD_TAG}
+
+                    echo "Application deployed successfully! Accessible on port 5000."
+                    docker ps --filter name=cloudops-prod-app
+                '''
             }
         }
     }
