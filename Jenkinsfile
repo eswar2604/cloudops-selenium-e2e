@@ -112,7 +112,7 @@ pipeline {
             steps {
                 echo "=== Step 6: Deploying Verified Container to Target Environment ==="
                 sh '''
-                    echo "Deploying application container on port 8000..."
+                    echo "Deploying application container on port 80..."
 
                     # Stop and remove existing production container if running
                     docker stop cloudops-prod-app 2>/dev/null || true
@@ -122,11 +122,11 @@ pipeline {
                     docker run -d \
                         --name cloudops-prod-app \
                         --restart unless-stopped \
-                        -p 8000:5000 \
+                        -p 80:5000 \
                         -e SECRET_KEY="prod-live-secret-key" \
                         ${APP_IMAGE_NAME}:${BUILD_TAG}
 
-                    echo "Application deployed successfully! Accessible on port 8000."
+                    echo "Application deployed successfully! Accessible on port 80."
                     docker ps --filter name=cloudops-prod-app
                 '''
             }
