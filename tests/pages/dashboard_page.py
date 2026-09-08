@@ -95,18 +95,8 @@ class DashboardPage(BasePage):
     def delete_resource_by_sku(self, sku):
         row = self.get_row_by_sku(sku)
         if row:
-            delete_btn = row.find_element(By.CSS_SELECTOR, ".delete-item-btn")
-            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", delete_btn)
-            try:
-                delete_btn.click()
-            except Exception:
-                self.driver.execute_script("arguments[0].click();", delete_btn)
-            # Accept confirmation alert if present
-            try:
-                alert = self.driver.switch_to.alert
-                alert.accept()
-            except Exception:
-                pass
+            form = row.find_element(By.CSS_SELECTOR, "form")
+            self.driver.execute_script("arguments[0].submit();", form)
 
     def reset_inventory(self):
         self.click(self.RESET_INVENTORY_BTN)
