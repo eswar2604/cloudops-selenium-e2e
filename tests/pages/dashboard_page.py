@@ -94,10 +94,6 @@ class DashboardPage(BasePage):
                 pass
 
     def add_resource(self, name, sku, category="Compute", quantity=1, price=50.0):
-        try:
-            old_body = self.driver.find_element(By.ID, "inventory-table-body")
-        except Exception:
-            old_body = None
         js_code = f"""
             document.getElementById('item-name').value = '{name}';
             document.getElementById('item-sku').value = '{sku}';
@@ -107,28 +103,20 @@ class DashboardPage(BasePage):
             document.getElementById('add-item-form').submit();
         """
         self.driver.execute_script(js_code)
-        if old_body:
-            try:
-                WebDriverWait(self.driver, 5).until(EC.staleness_of(old_body))
-            except Exception:
-                pass
-
-    def get_row_by_sku(self, sku, timeout=3):
         locator = (By.CSS_SELECTOR, f"#inventory-table-body tr[data-sku='{sku.upper()}']")
-        try:
-            return WebDriverWait(self.driver, timeout).until(EC.presence_of_element_located(locator))
-        except Exception:
-            return None
+        WebDriverWait(self.driver, 8).until(EC.presence_of_element_located(locator))
+
+    def get_row_by_sku(self, sku):
+        rows = self.driver.find_elements(By.CSS_SELECTOR, f"#inventory-table-body tr[data-sku='{sku.upper()}']")
+        return rows[0] if rows else None
 
     def delete_resource_by_sku(self, sku):
         row = self.get_row_by_sku(sku)
         if row:
-            form = row.find_element(By.CSS_SELECTOR, "form")
-            self.driver.execute_script("arguments[0].submit();", form)
-            try:
-                WebDriverWait(self.driver, 5).until(EC.staleness_of(row))
-            except Exception:
-                pass
+            btn = row.find_element(By.CSS_SELECTOR, "button.delete-item-btn")
+            self.driver.execute_script("arguments[0].click();", btn)
+            locator = (By.CSS_SELECTOR, f"#inventory-table-body tr[data-sku='{sku.upper()}']")
+            WebDriverWait(self.driver, 8).until(EC.invisibility_of_element_located(locator))
 
     def reset_inventory(self):
         try:
