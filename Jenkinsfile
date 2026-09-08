@@ -67,18 +67,32 @@ pipeline {
                 sh '''
                     mkdir -p ${REPORTS_DIR}/screenshots
 
+                    # Clean up old runner container if any
+                    docker rm -f selenium_test_runner 2>/dev/null || true
+
                     # Run Selenium test runner container targeting the ephemeral app
-                    docker run --rm \
+                    set +e
+                    docker run --name selenium_test_runner \
                         --network e2e-ci-network \
                         -e APP_BASE_URL="http://devops_web_app_ci:5000" \
                         -e PYTHONPATH="/workspace" \
-                        -v $(pwd)/${REPORTS_DIR}:/workspace/reports \
                         ${TEST_IMAGE_NAME}:${BUILD_TAG} \
                         pytest tests/ -v --headless \
                         --base-url="http://devops_web_app_ci:5000" \
                         --html=/workspace/reports/e2e_report.html \
                         --junitxml=/workspace/reports/junit_results.xml \
                         --self-contained-html
+                    TEST_EXIT_CODE=$?
+                    set -e
+
+                    # Copy test reports and screenshots from runner container
+                    docker cp selenium_test_runner:/workspace/reports/. ${REPORTS_DIR}/ 2>/dev/null || true
+                    docker rm -f selenium_test_runner 2>/dev/null || true
+
+                    if [ $TEST_EXIT_CODE -ne 0 ]; then
+                        echo "Tests failed with exit code $TEST_EXIT_CODE"
+                        exit $TEST_EXIT_CODE
+                    fi
                 '''
             }
         }
@@ -89,19 +103,8 @@ pipeline {
                 // Publish JUnit XML test results
                 junit allowEmptyResults: true, testResults: 'reports/junit_results.xml'
 
-                // Publish HTML report
-                publishHTML([
-                    allowMissing: true,
-                    alwaysLinkToLastBuild: true,
-                    keepAll: true,
-                    reportDir: 'reports',
-                    reportFiles: 'e2e_report.html',
-                    reportName: 'Selenium E2E Test Report',
-                    reportTitles: 'E2E Selenium Automation Results'
-                ])
-
-                // Archive failure screenshots if any
-                archiveArtifacts allowEmptyArchive: true, artifacts: 'reports/screenshots/*.png'
+                // Archive HTML report and screenshots
+                archiveArtifacts allowEmptyArchive: true, artifacts: 'reports/**'
             }
         }
 
@@ -138,6 +141,7 @@ pipeline {
             echo "=== Cleaning Up Ephemeral CI Resources ==="
             sh '''
                 docker rm -f devops_web_app_ci 2>/dev/null || true
+                docker rm -f selenium_test_runner 2>/dev/null || true
                 docker network rm e2e-ci-network 2>/dev/null || true
             '''
         }
