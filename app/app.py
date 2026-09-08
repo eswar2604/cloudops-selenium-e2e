@@ -14,7 +14,8 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-12345")
 USERS = {
     "admin": "Admin@123",
     "qa_tester": "Testing!2024",
-    "demo_user": "Password123"
+    "demo_user": "Password123",
+    "arno":"dorian"
 }
 
 INITIAL_INVENTORY = [
