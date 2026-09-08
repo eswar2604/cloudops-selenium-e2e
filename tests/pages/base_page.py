@@ -31,10 +31,15 @@ class BasePage:
 
     def click(self, locator):
         element = self.find_clickable_element(locator)
-        element.click()
+        try:
+            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
+            element.click()
+        except Exception:
+            self.driver.execute_script("arguments[0].click();", element)
 
     def type_text(self, locator, text, clear_first=True):
         element = self.find_visible_element(locator)
+        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
         if clear_first:
             element.clear()
         element.send_keys(text)

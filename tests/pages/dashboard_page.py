@@ -96,7 +96,11 @@ class DashboardPage(BasePage):
         row = self.get_row_by_sku(sku)
         if row:
             delete_btn = row.find_element(By.CSS_SELECTOR, ".delete-item-btn")
-            delete_btn.click()
+            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", delete_btn)
+            try:
+                delete_btn.click()
+            except Exception:
+                self.driver.execute_script("arguments[0].click();", delete_btn)
             # Accept confirmation alert if present
             try:
                 alert = self.driver.switch_to.alert
