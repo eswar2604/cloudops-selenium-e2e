@@ -14,9 +14,7 @@ ENV/
 # Pytest / Test Reports & Artifacts
 .pytest_cache/
 reports/
-*.html
-*.xml
-*.png
+test-reports/
 
 # OS / Editor files
 .DS_Store
