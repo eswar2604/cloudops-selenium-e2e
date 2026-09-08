@@ -44,4 +44,4 @@ class LoginPage(BasePage):
         return ""
 
     def is_login_page_displayed(self):
-        return self.is_visible(self.LOGIN_HEADING) and self.is_visible(self.LOGIN_BUTTON)
+        return self.is_visible(self.LOGIN_HEADING, timeout=8) and self.is_visible(self.LOGIN_BUTTON, timeout=8)

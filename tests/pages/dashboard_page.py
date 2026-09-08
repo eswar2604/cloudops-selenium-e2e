@@ -48,7 +48,7 @@ class DashboardPage(BasePage):
         return self
 
     def is_dashboard_displayed(self):
-        return self.is_visible(self.DASHBOARD_TITLE)
+        return self.is_visible(self.DASHBOARD_TITLE, timeout=8)
 
     def get_logged_in_username(self):
         return self.get_text(self.CURRENT_USER)

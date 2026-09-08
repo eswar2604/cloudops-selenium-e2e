@@ -25,7 +25,10 @@ def pytest_addoption(parser):
 @pytest.fixture(scope="session")
 def base_url(request):
     """Retrieve base URL from pytest CLI or environment."""
-    return os.environ.get("APP_BASE_URL", request.config.getoption("--base-url"))
+    env_url = os.environ.get("APP_BASE_URL")
+    if env_url and env_url.strip():
+        return env_url.strip()
+    return request.config.getoption("--base-url") or "http://localhost:5000"
 
 
 @pytest.fixture(scope="function")

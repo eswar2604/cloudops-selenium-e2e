@@ -75,6 +75,7 @@ pipeline {
                         -v $(pwd)/${REPORTS_DIR}:/workspace/reports \
                         ${TEST_IMAGE_NAME}:${BUILD_TAG} \
                         pytest tests/ -v --headless \
+                        --base-url="http://devops_web_app_ci:5000" \
                         --html=/workspace/reports/e2e_report.html \
                         --junitxml=/workspace/reports/junit_results.xml \
                         --self-contained-html
