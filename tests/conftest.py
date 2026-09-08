@@ -43,6 +43,7 @@ def driver(request):
         options.add_argument("--disable-gpu")
         options.add_argument("--window-size=1920,1080")
         options.add_argument("--ignore-certificate-errors")
+        options.add_argument("--disable-software-rasterizer")
 
         # Set Chromium binary location if running in Linux container
         chrome_bin = os.environ.get("CHROME_BIN")
@@ -66,7 +67,8 @@ def driver(request):
     else:
         raise ValueError(f"Unsupported browser type: {browser_type}")
 
-    driver_instance.implicitly_wait(5)
+    driver_instance.set_page_load_timeout(25)
+    driver_instance.implicitly_wait(10)
     driver_instance.maximize_window()
 
     yield driver_instance

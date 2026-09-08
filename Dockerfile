@@ -18,12 +18,13 @@ COPY app/ ./app/
 # Environment variables
 ENV PORT=5000
 ENV FLASK_APP=app/app.py
+ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
 EXPOSE 5000
 
 # Healthcheck
-HEALTHCHECK --interval=10s --timeout=3s --retries=3 \
+HEALTHCHECK --interval=5s --timeout=3s --retries=5 \
   CMD curl -f http://localhost:5000/health || exit 1
 
 # Production WSGI server

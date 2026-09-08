@@ -37,8 +37,8 @@ pipeline {
                 echo "=== Step 3: Launching Ephemeral Test Environment ==="
                 sh '''
                     # Clean up old test containers if any
-                    docker rm -f devops_web_app_ci || true
-                    docker network create e2e-ci-network || true
+                    docker rm -f devops_web_app_ci 2>/dev/null || true
+                    docker network create e2e-ci-network 2>/dev/null || true
 
                     # Start target app container on test network
                     docker run -d --name devops_web_app_ci \
@@ -48,7 +48,15 @@ pipeline {
 
                     # Wait for app healthcheck
                     echo "Waiting for app service to become healthy..."
-                    sleep 5
+                    sleep 3
+                    for i in $(seq 1 10); do
+                        if docker exec devops_web_app_ci curl -sf http://localhost:5000/health > /dev/null; then
+                            echo "Application is healthy and ready for testing!"
+                            break
+                        fi
+                        echo "Waiting for app startup ($i/10)..."
+                        sleep 2
+                    done
                 '''
             }
         }
