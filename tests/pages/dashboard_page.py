@@ -1,5 +1,6 @@
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import Select, WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from tests.pages.base_page import BasePage
 
 
@@ -83,10 +84,12 @@ class DashboardPage(BasePage):
             document.getElementById('add-item-form').submit();
         """
         self.driver.execute_script(js_code)
+        # Wait until the new page is loaded with the success flash message
+        WebDriverWait(self.driver, 10).until(
+            EC.text_to_be_present_in_element((By.ID, "flash-message"), "added successfully")
+        )
 
-    def get_row_by_sku(self, sku, timeout=5):
-        from selenium.webdriver.support.ui import WebDriverWait
-        from selenium.webdriver.support import expected_conditions as EC
+    def get_row_by_sku(self, sku, timeout=3):
         locator = (By.CSS_SELECTOR, f"#inventory-table-body tr[data-sku='{sku.upper()}']")
         try:
             return WebDriverWait(self.driver, timeout).until(EC.presence_of_element_located(locator))
@@ -98,17 +101,17 @@ class DashboardPage(BasePage):
         if row:
             form = row.find_element(By.CSS_SELECTOR, "form")
             self.driver.execute_script("arguments[0].submit();", form)
-
-    def wait_for_sku_disappeared(self, sku, timeout=10):
-        from selenium.webdriver.support.ui import WebDriverWait
-        from selenium.webdriver.support import expected_conditions as EC
-        from selenium.common.exceptions import TimeoutException
-
-        locator = (By.CSS_SELECTOR, f"#inventory-table-body tr[data-sku='{sku.upper()}']")
-        try:
-            return WebDriverWait(self.driver, timeout).until(EC.invisibility_of_element_located(locator))
-        except TimeoutException:
-            return False
+            # Wait until the deletion finishes and flash message is displayed
+            WebDriverWait(self.driver, 10).until(
+                EC.text_to_be_present_in_element((By.ID, "flash-message"), "removed from inventory")
+            )
 
     def reset_inventory(self):
-        self.click(self.RESET_INVENTORY_BTN)
+        btn = self.find_element(self.RESET_INVENTORY_BTN)
+        self.driver.execute_script("arguments[0].click();", btn)
+        try:
+            WebDriverWait(self.driver, 5).until(
+                EC.text_to_be_present_in_element((By.ID, "flash-message"), "reset to default")
+            )
+        except Exception:
+            pass
