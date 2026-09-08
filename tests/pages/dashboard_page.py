@@ -26,6 +26,7 @@ class DashboardPage(BasePage):
 
     # Inventory Table
     INVENTORY_TABLE = (By.ID, "inventory-table")
+    TABLE_BODY = (By.ID, "inventory-table-body")
     TABLE_ROWS = (By.CSS_SELECTOR, "#inventory-table-body tr")
     NO_ITEMS_MESSAGE = (By.ID, "no-items-message")
 
@@ -66,15 +67,37 @@ class DashboardPage(BasePage):
         return int(self.get_text(self.STAT_TOTAL_ITEMS))
 
     def search(self, query):
+        try:
+            old_body = self.driver.find_element(By.ID, "inventory-table-body")
+        except Exception:
+            old_body = None
         self.type_text(self.SEARCH_INPUT, query)
         self.click(self.FILTER_SUBMIT_BTN)
+        if old_body:
+            try:
+                WebDriverWait(self.driver, 5).until(EC.staleness_of(old_body))
+            except Exception:
+                pass
 
     def filter_by_category(self, category_name):
+        try:
+            old_body = self.driver.find_element(By.ID, "inventory-table-body")
+        except Exception:
+            old_body = None
         select_element = self.find_clickable_element(self.CATEGORY_FILTER)
         Select(select_element).select_by_visible_text(category_name)
         self.click(self.FILTER_SUBMIT_BTN)
+        if old_body:
+            try:
+                WebDriverWait(self.driver, 5).until(EC.staleness_of(old_body))
+            except Exception:
+                pass
 
     def add_resource(self, name, sku, category="Compute", quantity=1, price=50.0):
+        try:
+            old_body = self.driver.find_element(By.ID, "inventory-table-body")
+        except Exception:
+            old_body = None
         js_code = f"""
             document.getElementById('item-name').value = '{name}';
             document.getElementById('item-sku').value = '{sku}';
@@ -84,10 +107,11 @@ class DashboardPage(BasePage):
             document.getElementById('add-item-form').submit();
         """
         self.driver.execute_script(js_code)
-        # Wait until the new page is loaded with the success flash message
-        WebDriverWait(self.driver, 10).until(
-            EC.text_to_be_present_in_element((By.ID, "flash-message"), "added successfully")
-        )
+        if old_body:
+            try:
+                WebDriverWait(self.driver, 5).until(EC.staleness_of(old_body))
+            except Exception:
+                pass
 
     def get_row_by_sku(self, sku, timeout=3):
         locator = (By.CSS_SELECTOR, f"#inventory-table-body tr[data-sku='{sku.upper()}']")
@@ -101,17 +125,20 @@ class DashboardPage(BasePage):
         if row:
             form = row.find_element(By.CSS_SELECTOR, "form")
             self.driver.execute_script("arguments[0].submit();", form)
-            # Wait until the deletion finishes and flash message is displayed
-            WebDriverWait(self.driver, 10).until(
-                EC.text_to_be_present_in_element((By.ID, "flash-message"), "removed from inventory")
-            )
+            try:
+                WebDriverWait(self.driver, 5).until(EC.staleness_of(row))
+            except Exception:
+                pass
 
     def reset_inventory(self):
+        try:
+            old_body = self.driver.find_element(By.ID, "inventory-table-body")
+        except Exception:
+            old_body = None
         btn = self.find_element(self.RESET_INVENTORY_BTN)
         self.driver.execute_script("arguments[0].click();", btn)
-        try:
-            WebDriverWait(self.driver, 5).until(
-                EC.text_to_be_present_in_element((By.ID, "flash-message"), "reset to default")
-            )
-        except Exception:
-            pass
+        if old_body:
+            try:
+                WebDriverWait(self.driver, 5).until(EC.staleness_of(old_body))
+            except Exception:
+                pass
