@@ -74,36 +74,30 @@ class DashboardPage(BasePage):
         self.click(self.FILTER_SUBMIT_BTN)
 
     def add_resource(self, name, sku, category="Compute", quantity=1, price=50.0):
-        import time
-        self.driver.execute_script("document.getElementById('open-add-modal-btn').click();")
-        time.sleep(1)
-        self.type_text(self.MODAL_ITEM_NAME, name)
-        self.type_text(self.MODAL_ITEM_SKU, sku)
+        js_code = f"""
+            document.getElementById('item-name').value = '{name}';
+            document.getElementById('item-sku').value = '{sku}';
+            document.getElementById('item-category').value = '{category}';
+            document.getElementById('item-quantity').value = '{quantity}';
+            document.getElementById('item-price').value = '{price}';
+            document.getElementById('add-item-form').submit();
+        """
+        self.driver.execute_script(js_code)
 
-        select_element = self.find_clickable_element(self.MODAL_ITEM_CATEGORY)
-        Select(select_element).select_by_visible_text(category)
-
-        self.type_text(self.MODAL_ITEM_QUANTITY, str(quantity))
-        self.type_text(self.MODAL_ITEM_PRICE, str(price))
-
-        form = self.find_element((By.ID, "add-item-form"))
-        self.driver.execute_script("arguments[0].submit();", form)
-        time.sleep(2)
-
-    def get_row_by_sku(self, sku):
+    def get_row_by_sku(self, sku, timeout=5):
+        from selenium.webdriver.support.ui import WebDriverWait
+        from selenium.webdriver.support import expected_conditions as EC
         locator = (By.CSS_SELECTOR, f"#inventory-table-body tr[data-sku='{sku.upper()}']")
-        rows = self.driver.find_elements(*locator)
-        if rows:
-            return rows[0]
-        return None
+        try:
+            return WebDriverWait(self.driver, timeout).until(EC.presence_of_element_located(locator))
+        except Exception:
+            return None
 
     def delete_resource_by_sku(self, sku):
-        import time
         row = self.get_row_by_sku(sku)
         if row:
             form = row.find_element(By.CSS_SELECTOR, "form")
             self.driver.execute_script("arguments[0].submit();", form)
-            time.sleep(2)
 
     def wait_for_sku_disappeared(self, sku, timeout=10):
         from selenium.webdriver.support.ui import WebDriverWait
