@@ -63,6 +63,7 @@ pipeline {
                     docker run --rm \
                         --network e2e-ci-network \
                         -e APP_BASE_URL="http://devops_web_app_ci:5000" \
+                        -e PYTHONPATH="/workspace" \
                         -v $(pwd)/${REPORTS_DIR}:/workspace/reports \
                         ${TEST_IMAGE_NAME}:${BUILD_TAG} \
                         pytest tests/ -v --headless \

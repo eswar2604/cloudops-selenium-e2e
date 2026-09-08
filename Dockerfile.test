@@ -13,9 +13,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libfontconfig1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Set Chrome binary and driver envs
+# Set Chrome binary, driver envs and python path
 ENV CHROME_BIN=/usr/bin/chromium
 ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
+ENV PYTHONPATH=/workspace
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
