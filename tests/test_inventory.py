@@ -79,8 +79,6 @@ class TestInventoryManagement:
 
         dashboard_page.delete_resource_by_sku(target_sku)
 
-        # Allow DOM update
-        time.sleep(1)
-
-        assert dashboard_page.get_row_by_sku(target_sku) is None, f"Item {target_sku} should be removed"
+        # Explicitly wait for element to disappear from DOM
+        assert dashboard_page.wait_for_sku_disappeared(target_sku), f"Item {target_sku} should disappear from table"
         assert dashboard_page.get_total_stat_count() == initial_count - 1

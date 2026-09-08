@@ -95,8 +95,19 @@ class DashboardPage(BasePage):
     def delete_resource_by_sku(self, sku):
         row = self.get_row_by_sku(sku)
         if row:
-            form = row.find_element(By.CSS_SELECTOR, "form")
-            self.driver.execute_script("arguments[0].submit();", form)
+            delete_btn = row.find_element(By.CSS_SELECTOR, ".delete-item-btn")
+            self.driver.execute_script("arguments[0].click();", delete_btn)
+
+    def wait_for_sku_disappeared(self, sku, timeout=10):
+        from selenium.webdriver.support.ui import WebDriverWait
+        from selenium.webdriver.support import expected_conditions as EC
+        from selenium.common.exceptions import TimeoutException
+
+        locator = (By.CSS_SELECTOR, f"#inventory-table-body tr[data-sku='{sku.upper()}']")
+        try:
+            return WebDriverWait(self.driver, timeout).until(EC.invisibility_of_element_located(locator))
+        except TimeoutException:
+            return False
 
     def reset_inventory(self):
         self.click(self.RESET_INVENTORY_BTN)
