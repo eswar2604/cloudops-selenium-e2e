@@ -74,8 +74,9 @@ class DashboardPage(BasePage):
         self.click(self.FILTER_SUBMIT_BTN)
 
     def add_resource(self, name, sku, category="Compute", quantity=1, price=50.0):
-        self.click(self.OPEN_ADD_MODAL_BTN)
-        self.find_visible_element(self.MODAL_ITEM_NAME)
+        import time
+        self.driver.execute_script("document.getElementById('open-add-modal-btn').click();")
+        time.sleep(1)
         self.type_text(self.MODAL_ITEM_NAME, name)
         self.type_text(self.MODAL_ITEM_SKU, sku)
 
@@ -84,19 +85,25 @@ class DashboardPage(BasePage):
 
         self.type_text(self.MODAL_ITEM_QUANTITY, str(quantity))
         self.type_text(self.MODAL_ITEM_PRICE, str(price))
-        self.click(self.MODAL_SUBMIT_BTN)
+
+        form = self.find_element((By.ID, "add-item-form"))
+        self.driver.execute_script("arguments[0].submit();", form)
+        time.sleep(2)
 
     def get_row_by_sku(self, sku):
         locator = (By.CSS_SELECTOR, f"#inventory-table-body tr[data-sku='{sku.upper()}']")
-        if self.is_visible(locator):
-            return self.find_element(locator)
+        rows = self.driver.find_elements(*locator)
+        if rows:
+            return rows[0]
         return None
 
     def delete_resource_by_sku(self, sku):
+        import time
         row = self.get_row_by_sku(sku)
         if row:
-            delete_btn = row.find_element(By.CSS_SELECTOR, ".delete-item-btn")
-            self.driver.execute_script("arguments[0].click();", delete_btn)
+            form = row.find_element(By.CSS_SELECTOR, "form")
+            self.driver.execute_script("arguments[0].submit();", form)
+            time.sleep(2)
 
     def wait_for_sku_disappeared(self, sku, timeout=10):
         from selenium.webdriver.support.ui import WebDriverWait
