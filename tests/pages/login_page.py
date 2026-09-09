@@ -43,5 +43,30 @@ class LoginPage(BasePage):
             return self.get_text(self.FLASH_ALERT)
         return ""
 
+    def open_root(self):
+        self.navigate_to(self.base_url)
+        return self
+
+    def submit_bypassing_html5_validation(self, username="", password=""):
+        """Submits the login form with HTML5 novalidate set to test backend validation."""
+        self.driver.execute_script("document.getElementById('login-form').noValidate = true;")
+        if username:
+            self.enter_username(username)
+        else:
+            self.find_element(self.USERNAME_INPUT).clear()
+        if password:
+            self.enter_password(password)
+        else:
+            self.find_element(self.PASSWORD_INPUT).clear()
+        self.click_login()
+
+    def is_username_valid(self):
+        element = self.find_element(self.USERNAME_INPUT)
+        return self.driver.execute_script("return arguments[0].checkValidity();", element)
+
+    def is_password_valid(self):
+        element = self.find_element(self.PASSWORD_INPUT)
+        return self.driver.execute_script("return arguments[0].checkValidity();", element)
+
     def is_login_page_displayed(self):
         return self.is_visible(self.LOGIN_HEADING, timeout=8) and self.is_visible(self.LOGIN_BUTTON, timeout=8)

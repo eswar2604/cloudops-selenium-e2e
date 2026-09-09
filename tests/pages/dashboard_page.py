@@ -93,7 +93,11 @@ class DashboardPage(BasePage):
             except Exception:
                 pass
 
-    def add_resource(self, name, sku, category="Compute", quantity=1, price=50.0):
+    def submit_add_resource_form(self, name, sku, category="Compute", quantity=1, price=50.0):
+        try:
+            old_body = self.driver.find_element(By.ID, "inventory-table-body")
+        except Exception:
+            old_body = None
         js_code = f"""
             document.getElementById('item-name').value = '{name}';
             document.getElementById('item-sku').value = '{sku}';
@@ -103,6 +107,14 @@ class DashboardPage(BasePage):
             document.getElementById('add-item-form').submit();
         """
         self.driver.execute_script(js_code)
+        if old_body:
+            try:
+                WebDriverWait(self.driver, 5).until(EC.staleness_of(old_body))
+            except Exception:
+                pass
+
+    def add_resource(self, name, sku, category="Compute", quantity=1, price=50.0):
+        self.submit_add_resource_form(name, sku, category, quantity, price)
         locator = (By.CSS_SELECTOR, f"#inventory-table-body tr[data-sku='{sku.upper()}']")
         WebDriverWait(self.driver, 8).until(EC.presence_of_element_located(locator))
 
