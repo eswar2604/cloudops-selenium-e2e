@@ -163,7 +163,7 @@ def driver(request):
     yield driver_instance
 
     # ========================================================
-    # FAILURE SCREENSHOT
+    # FAILURE SCREENSHOTS
     # ========================================================
 
     if (
