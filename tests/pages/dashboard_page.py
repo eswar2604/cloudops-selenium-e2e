@@ -67,37 +67,36 @@ class DashboardPage(BasePage):
         return int(self.get_text(self.STAT_TOTAL_ITEMS))
 
     def search(self, query):
+        old_body = None
         try:
             old_body = self.driver.find_element(By.ID, "inventory-table-body")
         except Exception:
-            old_body = None
+            pass
         self.type_text(self.SEARCH_INPUT, query)
         self.click(self.FILTER_SUBMIT_BTN)
         if old_body:
-            try:
-                WebDriverWait(self.driver, 5).until(EC.staleness_of(old_body))
-            except Exception:
-                pass
+            self.wait_for_staleness(old_body, timeout=8)
+        self.find_element(self.TABLE_BODY)
 
     def filter_by_category(self, category_name):
+        old_body = None
         try:
             old_body = self.driver.find_element(By.ID, "inventory-table-body")
         except Exception:
-            old_body = None
+            pass
         select_element = self.find_clickable_element(self.CATEGORY_FILTER)
         Select(select_element).select_by_visible_text(category_name)
         self.click(self.FILTER_SUBMIT_BTN)
         if old_body:
-            try:
-                WebDriverWait(self.driver, 5).until(EC.staleness_of(old_body))
-            except Exception:
-                pass
+            self.wait_for_staleness(old_body, timeout=8)
+        self.find_element(self.TABLE_BODY)
 
     def submit_add_resource_form(self, name, sku, category="Compute", quantity=1, price=50.0):
+        old_body = None
         try:
             old_body = self.driver.find_element(By.ID, "inventory-table-body")
         except Exception:
-            old_body = None
+            pass
         js_code = f"""
             document.getElementById('item-name').value = '{name}';
             document.getElementById('item-sku').value = '{sku}';
@@ -108,37 +107,47 @@ class DashboardPage(BasePage):
         """
         self.driver.execute_script(js_code)
         if old_body:
-            try:
-                WebDriverWait(self.driver, 5).until(EC.staleness_of(old_body))
-            except Exception:
-                pass
+            self.wait_for_staleness(old_body, timeout=8)
 
     def add_resource(self, name, sku, category="Compute", quantity=1, price=50.0):
         self.submit_add_resource_form(name, sku, category, quantity, price)
         locator = (By.CSS_SELECTOR, f"#inventory-table-body tr[data-sku='{sku.upper()}']")
-        WebDriverWait(self.driver, 20).until(EC.presence_of_element_located(locator))
+        return WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located(locator))
 
     def get_row_by_sku(self, sku):
-        rows = self.driver.find_elements(By.CSS_SELECTOR, f"#inventory-table-body tr[data-sku='{sku.upper()}']")
-        return rows[0] if rows else None
+        try:
+            rows = self.driver.find_elements(By.CSS_SELECTOR, f"#inventory-table-body tr[data-sku='{sku.upper()}']")
+            return rows[0] if rows else None
+        except Exception:
+            return None
 
     def delete_resource_by_sku(self, sku):
         row = self.get_row_by_sku(sku)
         if row:
+            old_body = None
+            try:
+                old_body = self.driver.find_element(By.ID, "inventory-table-body")
+            except Exception:
+                pass
             btn = row.find_element(By.CSS_SELECTOR, "button.delete-item-btn")
             self.driver.execute_script("arguments[0].click();", btn)
+            if old_body:
+                self.wait_for_staleness(old_body, timeout=8)
             locator = (By.CSS_SELECTOR, f"#inventory-table-body tr[data-sku='{sku.upper()}']")
-            WebDriverWait(self.driver, 8).until(EC.invisibility_of_element_located(locator))
+            self.wait_for_invisibility(locator, timeout=8)
 
     def reset_inventory(self):
+        # Ensure we are on the dashboard before attempting reset
+        if "/dashboard" not in self.get_current_url():
+            self.open()
+        old_body = None
         try:
             old_body = self.driver.find_element(By.ID, "inventory-table-body")
         except Exception:
-            old_body = None
-        btn = self.find_element(self.RESET_INVENTORY_BTN)
+            pass
+        btn = self.find_clickable_element(self.RESET_INVENTORY_BTN)
         self.driver.execute_script("arguments[0].click();", btn)
         if old_body:
-            try:
-                WebDriverWait(self.driver, 5).until(EC.staleness_of(old_body))
-            except Exception:
-                pass
+            self.wait_for_staleness(old_body, timeout=8)
+        self.find_element(self.TABLE_BODY)
+        return self

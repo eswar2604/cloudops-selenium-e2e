@@ -27,5 +27,5 @@ EXPOSE 5000
 HEALTHCHECK --interval=5s --timeout=3s --retries=5 \
   CMD curl -f http://localhost:5000/health || exit 1
 
-# Production WSGI server
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "app.app:app"]
+# Production WSGI server (single worker with threads to keep in-memory mock store synchronized)
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "1", "--threads", "4", "app.app:app"]

@@ -73,7 +73,8 @@ def driver(request):
         raise ValueError(f"Unsupported browser type: {browser_type}")
 
     driver_instance.set_page_load_timeout(25)
-    driver_instance.implicitly_wait(10)
+    # Avoid mixing implicit wait with explicit waits (WebDriverWait) to prevent race conditions and 10s negative assertion penalties
+    driver_instance.implicitly_wait(0)
     driver_instance.maximize_window()
 
     yield driver_instance

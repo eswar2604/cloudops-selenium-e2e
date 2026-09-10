@@ -24,7 +24,11 @@ class TestInventoryManagement:
         try:
             dashboard_page.reset_inventory()
         except Exception:
-            pass
+            try:
+                dashboard_page.open()
+                dashboard_page.reset_inventory()
+            except Exception:
+                pass
 
     @pytest.mark.smoke
     def test_add_new_cloud_resource(self, driver, base_url):

@@ -63,3 +63,17 @@ class BasePage:
 
     def wait_for_url_contains(self, path_substring):
         return self.wait.until(EC.url_contains(path_substring))
+
+    def wait_for_staleness(self, element, timeout=10):
+        """Wait for an element to become stale, indicating a DOM replacement or page reload."""
+        try:
+            return WebDriverWait(self.driver, timeout).until(EC.staleness_of(element))
+        except (TimeoutException, NoSuchElementException):
+            return False
+
+    def wait_for_invisibility(self, locator, timeout=10):
+        """Wait for an element matching locator to become invisible or absent from the DOM."""
+        try:
+            return WebDriverWait(self.driver, timeout).until(EC.invisibility_of_element_located(locator))
+        except TimeoutException:
+            return False
