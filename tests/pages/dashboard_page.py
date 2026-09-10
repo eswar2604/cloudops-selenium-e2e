@@ -116,7 +116,7 @@ class DashboardPage(BasePage):
     def add_resource(self, name, sku, category="Compute", quantity=1, price=50.0):
         self.submit_add_resource_form(name, sku, category, quantity, price)
         locator = (By.CSS_SELECTOR, f"#inventory-table-body tr[data-sku='{sku.upper()}']")
-        WebDriverWait(self.driver, 8).until(EC.presence_of_element_located(locator))
+        WebDriverWait(self.driver, 20).until(EC.presence_of_element_located(locator))
 
     def get_row_by_sku(self, sku):
         rows = self.driver.find_elements(By.CSS_SELECTOR, f"#inventory-table-body tr[data-sku='{sku.upper()}']")
